@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>做单文件</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #2c3e50;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            color: #2575fc;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        /* 二维码区域 */
+        .qr-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #2575fc;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eaeef5;
+            text-align: center;
+        }
+        
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .qr-card {
+            background: #f9fafc;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 18px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .qr-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            background: #f0f4ff;
+        }
+        
+        .qr-title {
+            font-size: 1rem;
+            color: #2575fc;
+            margin-bottom: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .qr-code {
+            width: 130px;
+            height: 130px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 链接区域 */
+        .links-section {
+            margin-bottom: 15px;
+        }
+        
+        .link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .link-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f9fafc;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .link-item:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            background: #f0f4ff;
+        }
+        
+        .link-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        
+        .link-name {
+            font-weight: 500;
+            color: #2575fc;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .link-url {
+            color: #666;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .link-arrow {
+            color: #6a11cb;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #666;
+            font-size: 0.8rem;
+            padding: 0 10px;
+        }
+        
+        /* 移动端优化 */
+        @media (min-width: 500px) {
+            .qr-container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .qr-card {
+                width: calc(50% - 10px);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 700px;
+                padding: 25px;
+            }
+            
+            .qr-container {
+                flex-direction: row;
+                justify-content: space-around;
+            }
+            
+            .qr-card {
+                width: 30%;
+                max-width: 180px;
+            }
+        }
+        
+        .highlight {
+            color: #6a11cb;
+            font-weight: 500;
+        }
+        
+        /* 触摸反馈效果 */
+        .touch-feedback {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .touch-feedback:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(37, 117, 252, 0.3);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .touch-feedback:active:after {
+            animation: ripple 0.6s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.8;
+            }
+            20% {
+                transform: scale(30, 30);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(60, 60);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container"> 
+            <!-- 二维码区域 -->
+            <section class="qr-section">
+                <h2 class="section-title">三方数据</h2>
+                <div class="qr-container">
+                    <div class="qr-card touch-feedback" v-for="(qr, index) in qrCodes" :key="'qr-'+index" @click="visitLink(qr.url)">
+                        <h3 class="qr-title">{{ qr.title }}</h3>
+                        <div class="qr-code">
+                            <canvas :id="'qrcode-' + index"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 链接区域 -->
+            <section class="links-section">
+                <h2 class="section-title">限三不限三</h2>
+                <div class="link-list">
+                    <div class="link-item touch-feedback" v-for="(link, index) in links" :key="'link-'+index" @click="visitLink(link.url)">
+                        <div class="link-info">
+                            <div class="link-name">{{ link.name }}</div>
+                        </div>
+                        <div class="link-arrow">→</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+        
+        createApp({
+            setup() {
+                const currentDate = new Date().toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                const qrCodes = ref([
+                { 
+                        title: '工行三方', 
+                        url: 'https://form79682.haikebiaodan.com/?id=790405184976961536'
+                    },
+                    { 
+                        title: '农行三方', 
+                        url: 'https://form79682.haikebiaodan.com/?id=793675233909207040'
+                    },
+                    { 
+                        title: '建行三方', 
+                        url: 'https://form79682.haikebiaodan.com/?id=793675233909207040'
+                    }
+                ]);
+                
+                const links = ref([
+                    { name: '银河养老金加挂-立返', url: 'https://iaddi0yezw4.feishu.cn/docx/Tvznd0Cn9oQkLnxS7ficyljJnXG' },
+                    { name: '西南【限三】任意卡买1元基金-全国版本', url: 'https://iaddi0yezw4.feishu.cn/docx/Pqvad3VFJoYIT3xYEdncMITmnbf' },
+                    { name: '中信建投【不限三】工行卡', url: 'https://iaddi0yezw4.feishu.cn/docx/B73pd0X1Qoxei1xNUjQcDbVunOb' },
+                    { name: '长江【不限三】建行卡', url: 'https://iaddi0yezw4.feishu.cn/docx/UqUydWFQIoFIdvxF4B9ciQ0YnDc' },
+                    { name: '中银【不限三】中行1-2类卡', url: 'https://iaddi0yezw4.feishu.cn/docx/UYHgdaJvooLmIgxCVHUcSj55nwg' },
+                    { name: '中信【不限三】全国兴业一类', url: 'https://iaddi0yezw4.feishu.cn/docx/C18qdxjutopHw0xVlE5cXpnpnrf' },
+                    { name: '苏州公积金-任意卡（留存1）-数据单', url: 'https://iaddi0yezw4.feishu.cn/docx/Ddc5ddq41oYkxfxcmFzcbwh5nmd' }
+                ]);
+                
+                function generateQrCode() {
+                    qrCodes.value.forEach((qr, index) => {
+                        setTimeout(() => {
+                            const canvas = document.getElementById('qrcode-' + index);
+                            if (canvas) {
+                                QRCode.toCanvas(canvas, qr.url, {
+                                    width: 120,
+                                    margin: 1,
+                                    color: {
+                                        dark: '#2575fc',
+                                        light: '#ffffff'
+                                    }
+                                }, function(error) {
+                                    if (error) console.error(error);
+                                });
+                            }
+                        }, 100);
+                    });
+                }
+                
+                function visitLink(url) {
+                    window.open(url, '_blank');
+                }
+                
+                onMounted(() => {
+                    generateQrCode();
+                });
+                
+                return {
+                    currentDate,
+                    qrCodes,
+                    links,
+                    visitLink
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
